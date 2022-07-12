@@ -18,6 +18,38 @@ sys_exit(void)
 }
 
 uint64
+sys_trace(void)
+{
+  int mask;
+
+  if (argint(0, &mask)<0)
+    return -1;
+  
+  myproc()->mask = mask;
+  return 0;
+}
+
+uint64
+sys_sysinfo(void)
+{
+  uint64 ptr, _nfreemem, _nproc; // ptr of sysinfo in user space
+  struct proc *p = myproc();
+
+  if(argaddr(0, &ptr) < 0)
+    return -1;
+
+  // collect sysinfo->freemem(uint64) and sysinfo->nproc(uint64)
+  _nfreemem = freemem();
+  _nproc   = nproc();
+
+  if(copyout(p->pagetable, ptr, (char *)&_nfreemem, sizeof(_nfreemem)) < 0 || 
+     copyout(p->pagetable, ptr + sizeof(_nfreemem), (char *)&_nproc, sizeof(_nproc)) < 0) {
+    return -1;
+  }
+  return 0;
+}
+
+uint64
 sys_getpid(void)
 {
   return myproc()->pid;
